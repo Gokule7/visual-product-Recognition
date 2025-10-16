@@ -36,6 +36,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 product_data = None
 product_features = None
 extractor = None
+data_base_dir = None  # Will be set when database loads
 
 def allowed_file(filename):
     """Check if uploaded file has valid extension"""
@@ -43,17 +44,38 @@ def allowed_file(filename):
 
 def load_product_database():
     """Load the gallery products and their features"""
-    global product_data, product_features, extractor
+    global product_data, product_features, extractor, data_base_dir
     
     print("Loading product database...")
     
     # Initialize feature extractor
     extractor = FeatureExtractor()
     
-    # Load gallery CSV - use absolute path
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    gallery_path = os.path.join(base_dir, 'development_test_data', 'gallery.csv')
+    # Load gallery CSV - handle both local and deployed environments
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Try different possible paths
+    possible_base_dirs = [
+        os.path.dirname(backend_dir),  # Parent of backend folder
+        backend_dir,  # Current directory (for Render)
+        os.getcwd()  # Working directory
+    ]
+    
+    gallery_path = None
+    for base_dir in possible_base_dirs:
+        test_path = os.path.join(base_dir, 'development_test_data', 'gallery.csv')
+        if os.path.exists(test_path):
+            gallery_path = test_path
+            print(f"Found gallery.csv at: {gallery_path}")
+            break
+    
+    if gallery_path is None:
+        raise FileNotFoundError("Could not find gallery.csv in any expected location")
+    
     product_data = pd.read_csv(gallery_path)
+    
+    # Store the base directory for image paths
+    data_base_dir = os.path.dirname(os.path.dirname(gallery_path))
     
     # Check if we have cached features
     backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -68,7 +90,7 @@ def load_product_database():
         features_list = []
         
         for idx, row in product_data.iterrows():
-            img_path = os.path.join(base_dir, 'development_test_data', row['img_path'])
+            img_path = os.path.join(data_base_dir, 'development_test_data', row['img_path'])
             
             if os.path.exists(img_path):
                 features = extractor.extract_from_path(img_path)
@@ -95,8 +117,26 @@ def home():
 @app.route('/images/<path:filename>')
 def serve_image(filename):
     """Serve product images from the dataset"""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    image_dir = os.path.join(base_dir, 'development_test_data')
+    global data_base_dir
+    
+    if data_base_dir is None:
+        # Fallback if database not loaded yet
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        possible_bases = [
+            os.path.dirname(backend_dir),
+            backend_dir,
+            os.getcwd()
+        ]
+        for base in possible_bases:
+            test_dir = os.path.join(base, 'development_test_data')
+            if os.path.exists(test_dir):
+                image_dir = test_dir
+                break
+        else:
+            return jsonify({'error': 'Image directory not found'}), 404
+    else:
+        image_dir = os.path.join(data_base_dir, 'development_test_data')
+    
     return send_from_directory(image_dir, filename)
 
 @app.route('/api/search', methods=['POST'])
