@@ -9,6 +9,9 @@ import {
 } from '@mui/material'
 import { CheckCircle } from '@mui/icons-material'
 
+// Get API URL from environment variable or fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 function ProductList({ products, isLoading }) {
   if (isLoading) {
     return null
@@ -39,7 +42,7 @@ function ProductList({ products, isLoading }) {
               <CardMedia
                 component="img"
                 height="200"
-                image={`http://localhost:5000/images/${product.image_path}`}
+                image={`${API_URL}/images/${product.image_path}`}
                 alt={`Product ${product.product_id}`}
                 sx={{ 
                   objectFit: 'cover',

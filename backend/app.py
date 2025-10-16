@@ -7,7 +7,15 @@ from werkzeug.utils import secure_filename
 from feature_extractor import FeatureExtractor, cosine_similarity
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend to connect
+
+# Configure CORS to allow requests from Netlify frontend
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000", "https://*.netlify.app", "https://*.netlify.com"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Config
 UPLOAD_FOLDER = 'temp_uploads'

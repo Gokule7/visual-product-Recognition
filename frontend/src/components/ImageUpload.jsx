@@ -12,6 +12,9 @@ import {
 import { CloudUpload, Link as LinkIcon } from '@mui/icons-material'
 import axios from 'axios'
 
+// Get API URL from environment variable or fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 function ImageUpload({ onSearchComplete, onSearchError, setIsLoading }) {
   const [selectedFile, setSelectedFile] = useState(null)
   const [imageUrl, setImageUrl] = useState('')
@@ -73,14 +76,14 @@ function ImageUpload({ onSearchComplete, onSearchError, setIsLoading }) {
         const formData = new FormData()
         formData.append('file', selectedFile)
         
-        response = await axios.post('http://localhost:5000/api/search', formData, {
+        response = await axios.post(`${API_URL}/api/search`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         })
       } else {
         // Use URL
-        response = await axios.post('http://localhost:5000/api/search', {
+        response = await axios.post(`${API_URL}/api/search`, {
           url: imageUrl
         }, {
           headers: {
