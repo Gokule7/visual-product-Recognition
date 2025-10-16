@@ -243,6 +243,31 @@ services:
 - Mobile app version
 - Advanced filtering (by category, price range, etc.)
 
+## 🚀 Online Deployment
+
+This application is ready to be deployed online! We've configured it for:
+
+### Backend: Render
+- Automatic builds from GitHub
+- Pre-configured with `render.yaml`
+- Includes feature cache building
+- Free tier available
+
+### Frontend: Netlify
+- One-click deployment
+- Environment variable support
+- Pre-configured with `netlify.toml`
+- Automatic builds from GitHub
+
+**📖 Complete Deployment Guide:** See [DEPLOYMENT_ONLINE.md](DEPLOYMENT_ONLINE.md) for step-by-step instructions.
+
+**Quick Start:**
+1. Push code to GitHub ✅ (Already done!)
+2. Deploy backend to Render (5-10 minutes)
+3. Deploy frontend to Netlify (2-3 minutes)
+4. Update environment variables
+5. Your app is live! 🎉
+
 ## Dataset
 
 This project uses the Visual Product Recognition Challenge 2023 dataset from AI Crowd. The gallery contains 1000+ product images with unique identifiers.
