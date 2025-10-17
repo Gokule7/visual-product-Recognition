@@ -46,7 +46,10 @@ def load_product_database():
     """Load the gallery products and their features"""
     global product_data, product_features, extractor, data_base_dir
     
+    print("=" * 60)
     print("Loading product database...")
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"__file__ location: {os.path.abspath(__file__)}")
     
     # Initialize feature extractor
     extractor = FeatureExtractor()
@@ -61,21 +64,39 @@ def load_product_database():
         os.getcwd()  # Working directory
     ]
     
+    print(f"Searching for gallery.csv in {len(possible_base_dirs)} possible locations...")
+    
     gallery_path = None
-    for base_dir in possible_base_dirs:
+    for i, base_dir in enumerate(possible_base_dirs, 1):
         test_path = os.path.join(base_dir, 'development_test_data', 'gallery.csv')
+        print(f"  {i}. Trying: {test_path}")
         if os.path.exists(test_path):
             gallery_path = test_path
-            print(f"Found gallery.csv at: {gallery_path}")
+            print(f"  ✅ Found gallery.csv at: {gallery_path}")
             break
+        else:
+            print(f"  ❌ Not found")
     
     if gallery_path is None:
+        # List what's actually in the directories
+        print("\n⚠️ Could not find gallery.csv!")
+        print("Listing directory contents for debugging:")
+        for base_dir in possible_base_dirs:
+            print(f"\nContents of {base_dir}:")
+            try:
+                contents = os.listdir(base_dir)
+                for item in contents[:10]:  # Show first 10 items
+                    print(f"  - {item}")
+            except Exception as e:
+                print(f"  Error listing: {e}")
         raise FileNotFoundError("Could not find gallery.csv in any expected location")
     
     product_data = pd.read_csv(gallery_path)
+    print(f"✅ Loaded {len(product_data)} products from CSV")
     
     # Store the base directory for image paths
     data_base_dir = os.path.dirname(os.path.dirname(gallery_path))
+    print(f"Data base directory: {data_base_dir}")
     
     # Check if we have cached features
     backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -222,9 +243,19 @@ def get_stats():
         'features_loaded': product_features is not None
     })
 
-if __name__ == '__main__':
-    # Load database when server starts
+# Load the product database when the module is imported (for Gunicorn/production)
+try:
+    print("\n🚀 Initializing application...")
     load_product_database()
+    print("✅ Product database loaded successfully!\n")
+except Exception as e:
+    print(f"❌ Error loading product database: {e}")
+    print("⚠️ Application will start but search functionality will not work!")
+    import traceback
+    traceback.print_exc()
+
+if __name__ == '__main__':
+    # Database is already loaded above
     
     # Run the server
     print("\n=== Visual Product Matcher Backend ===")
