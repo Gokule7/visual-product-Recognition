@@ -243,19 +243,29 @@ def get_stats():
         'features_loaded': product_features is not None
     })
 
-# Load the product database when the module is imported (for Gunicorn/production)
-try:
-    print("\n🚀 Initializing application...")
-    load_product_database()
-    print("✅ Product database loaded successfully!\n")
-except Exception as e:
-    print(f"❌ Error loading product database: {e}")
-    print("⚠️ Application will start but search functionality will not work!")
-    import traceback
-    traceback.print_exc()
+# Initialize database loading in a separate thread for production
+import threading
+
+def init_database():
+    """Initialize the database in a separate thread"""
+    try:
+        print("\n🚀 Initializing application...")
+        load_product_database()
+        print("✅ Product database loaded successfully!\n")
+    except Exception as e:
+        print(f"❌ Error loading product database: {e}")
+        print("⚠️ Application will start but search functionality will not work!")
+        import traceback
+        traceback.print_exc()
+
+# Start database loading in background thread
+print("Starting database initialization in background...")
+db_thread = threading.Thread(target=init_database, daemon=True)
+db_thread.start()
 
 if __name__ == '__main__':
-    # Database is already loaded above
+    # Wait for database to load when running locally
+    db_thread.join()
     
     # Run the server
     print("\n=== Visual Product Matcher Backend ===")
